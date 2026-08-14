@@ -1,0 +1,354 @@
+\documentclass[twoside]{article}
+\usepackage[preprint]{aistats2027}
+\usepackage[round,authoryear]{natbib}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{url}
+\renewcommand{\bibname}{References}
+\renewcommand{\bibsection}{\subsubsection*{\bibname}}
+\bibliographystyle{apalike}
+\setlength{\bibsep}{0pt plus 0.3ex}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\Dens}{\mathcal D}
+\newcommand{\M}{\mathcal M}
+\newcommand{\C}{\mathcal C}
+\newcommand{\R}{\mathbb R}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\Hsq}{\operatorname{H}^2}
+\newcommand{\Ent}{\operatorname{S}}
+\newcommand{\Ber}{\operatorname{Ber}}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\begin{document}
+\runningauthor{}
+\twocolumn[
+\aistatstitle{Tight Logarithmic Bounds for Adversarial Online Phase Retrieval}
+\aistatsauthor{Pahan Dewasurendra}
+\aistatsaddress{Johns Hopkins University}
+]
+\begin{abstract}
+We study realizable online phase retrieval: after an adversarial sensing vector $x_t$, a learner predicts the amplitude $|\ip{w_*}{x_t}|$ and then observes it exactly. Recent work proves an $O(\log^4 d)$ information-theoretic bound for bounded two-ReLU regression and an $\Omega(\log d)$ lower bound using the absolute-linear subclass. We close this gap for that subclass with an efficiently implementable horizon-free bound. Our algorithm lifts amplitudes to binary measurements of a density matrix and projects onto each revealed measurement constraint in quantum relative entropy. A quantum Pythagorean inequality and data processing make the measured Kullback--Leibler divergences telescope. Consequently, cumulative KL and squared Hellinger loss for arbitrary adaptive positive-operator-valued measurements are at most $D(\rho_*\|\rho_1)$. For a uniform prior this is $\log d-S(\rho_*)$. We prove that the KL value is exactly $\log(d/r)$ on maximally mixed rank-$r$ targets and give an effective-dimension Hellinger lower bound, making the entropy adaptation minimax sharp. The phase lift gives total squared amplitude loss at most $\log d$ for every horizon. A fixed target chosen before play and a nonanticipating dyadic sensing strategy force $\frac14\lfloor\log_2d\rfloor$ expected loss in $d-1$ rounds, with a matching lower-tail guarantee. Thus the worst-horizon minimax loss is $\Theta(\log d)$. We also prove a certified-interval upper bound of order $\log d+\sum_t\epsilon_t^2$ and a matching $\Omega(\log d+T\epsilon^2)$ lower bound for constant radius. Binary updates reduce to one-dimensional matrix-exponential root finding. The result requires exact probabilities or certified intervals, not sampled quantum outcomes.
+\end{abstract}
+
+\section{Introduction}
+
+Phase retrieval asks for an unknown signal from magnitudes of linear measurements. Most theory assumes random sensing vectors and studies batch recovery or stochastic optimization \citep{candes2015phase,tan2019online,huang2023adversarial}. We ask a different question: if sensing vectors are chosen adaptively and amplitudes are revealed online, how much prediction loss is intrinsically necessary?
+
+This question recently appeared inside realizable online regression. Every absolute-linear function has a two-ReLU representation
+\begin{equation}
+|\ip{w}{x}|=\operatorname{ReLU}(\ip{w}{x})+\operatorname{ReLU}(-\ip{w}{x}).
+\label{eq:two-relu}
+\end{equation}
+For bounded $k$-ReLU networks, \citet{doronarad2026online} prove an $O(k^2\log^4 d)$ cumulative square-loss upper bound and an $\Omega(k^2\log(d/k^2))$ lower bound. Their hard fixed-width subclass is \eqref{eq:two-relu}. The upper bound is not computationally efficient and leaves three powers of $\log d$ unresolved even on this structured subclass.
+
+The natural lift $|w^*x|^2=\tr(xx^*ww^*)$ turns phase retrieval into online prediction of a linear functional of a positive semidefinite matrix. This alone does not resolve the problem. Matrix exponentiated gradient already gives logarithmic realizable guarantees for \emph{squared intensity} error \citep{tsuda2005matrix}, while the desired amplitude loss applies a square root at zero and has no finite global Lipschitz constant. Generic contraction or squared-intensity arguments lose precisely where an amplitude can vanish.
+
+Our key observation is that square-root geometry is native to probability distributions. Let a density matrix $\rho_*$ generate an exact outcome law $q_t$ under an adaptively chosen measurement. Starting from $\rho_t$, project in quantum relative entropy onto the affine set of states that generate $q_t$. The projection identity, measurement data processing, and the relation between Kullback--Leibler (KL) and Hellinger divergences give the one-step chain
+\begin{equation}
+\Hsq(p_t,q_t)\leq\KL(q_t\|p_t)
+\leq D(\rho_*\|\rho_t)-D(\rho_*\|\rho_{t+1}).
+\label{eq:intro-chain}
+\end{equation}
+It telescopes without a learning rate, horizon, spectral gap, or lower bound on the probabilities.
+
+This yields four contributions. First, we prove the general KL and Hellinger telescope for arbitrary adaptive finite-outcome measurements, including singular iterates. The uniform-prior bound is $\log m-S(\rho_*)$, and we prove it exactly minimax for KL on every maximally mixed rank stratum under a fixed-target protocol. Second, a binary phase lift converts the first Hellinger coordinate exactly into amplitude error, giving an efficient $\log d$ bound for unit-norm phase retrieval and a $\log(d+1)$ bound when the signal norm is unknown. The argument extends to root-quadratic prediction. Third, we strengthen the dyadic construction of \citet{doronarad2026online}, specialized to absolute-linear functions, to a target chosen before play and a sensing strategy independent of learner predictions. It gives matching logarithmic expected and lower-tail bounds. This yields a tight worst-horizon characterization for the subclass that witnesses their general two-ReLU lower bound, not a new upper bound for all two-ReLU networks. Fourth, projection onto an amplitude interval gives a deterministic robust guarantee
+\begin{equation}
+\sum_t(\widehat y_t-y_t)^2
+\leq\left(\sqrt{D(\rho_*\|\rho_1)}+2\sqrt{\sum_t\epsilon_t^2}\right)^2.
+\label{eq:intro-robust}
+\end{equation}
+A combined construction proves that both dependencies are necessary up to constants.
+
+The feedback model matters. Online quantum-state learning usually receives noisy estimates or sampled outcomes and controls mistakes or regret \citep{aaronson2018online,chen2020practical,yang2020revisiting,meyer2025pure}. Our finite telescope assumes that the target outcome distribution is revealed exactly, as an online regression label. Certified sets are covered by \eqref{eq:intro-robust}. A single sampled outcome does not define a consistency set containing the target and is outside our theorem.
+
+\section{Entropic Outcome Prediction}
+\label{sec:quantum}
+
+Let $\Dens_m$ be the density matrices on $\mathbb C^m$, namely positive semidefinite Hermitian matrices of trace one. All results also hold over real symmetric matrices. A finite-outcome positive-operator-valued measure (POVM) is $\M=(E_1,\ldots,E_K)$ with $E_i\succeq0$ and $\sum_iE_i=I$. It maps a state to the distribution
+\begin{equation}
+\M(\rho)_i=\tr(E_i\rho).
+\end{equation}
+For distributions $p,q$, use the unnormalized squared Hellinger divergence
+\begin{equation}
+\Hsq(p,q)=\sum_i(\sqrt{p_i}-\sqrt{q_i})^2.
+\label{eq:hellinger}
+\end{equation}
+For states $\rho,\sigma$, quantum relative entropy is
+\begin{equation}
+D(\rho\|\sigma)=\tr\{\rho(\log\rho-\log\sigma)\},
+\label{eq:qre}
+\end{equation}
+with value $+\infty$ unless $\supp(\rho)\subseteq\supp(\sigma)$. The von Neumann entropy is $\Ent(\rho)=-\tr(\rho\log\rho)$.
+
+\paragraph{Protocol.} Fix an unknown $\rho_*\in\Dens_m$. The learner initializes a full-rank $\rho_1$. On round $t$, an adaptive adversary reveals a POVM $\M_t$. The learner predicts $p_t=\M_t(\rho_t)$, observes the exact vector $q_t=\M_t(\rho_*)$, and incurs either $\KL(q_t\|p_t)$ or \eqref{eq:hellinger}. Define
+\begin{equation}
+\C_t=\{\rho\in\Dens_m:\M_t(\rho)=q_t\}.
+\label{eq:consistency}
+\end{equation}
+The update is the information projection
+\begin{equation}
+\rho_{t+1}\in\arg\min_{\rho\in\C_t}D(\rho\|\rho_t).
+\label{eq:iprojection}
+\end{equation}
+After a boundary outcome, minimization is on the support face of $\rho_t$. The target remains in that face, so the update is always well defined. Algorithmically, $\rho_t$ is chosen from past feedback before $\M_t$ is revealed. Its prediction after seeing $\M_t$ is proper and immediate.
+
+\begin{theorem}[Entropic telescope]
+\label{thm:telescope}
+For every target, horizon, and adaptive sequence of POVMs, update \eqref{eq:iprojection} satisfies
+\begin{align}
+\sum_{t=1}^T\KL(q_t\|p_t)&\leq D(\rho_*\|\rho_1),
+\label{eq:kl-telescope}\\
+\sum_{t=1}^T\Hsq(p_t,q_t)&\leq D(\rho_*\|\rho_1).
+\label{eq:h-telescope}
+\end{align}
+With $\rho_1=I/m$, both right sides equal $\log m-\Ent(\rho_*)\leq\log m$.
+\end{theorem}
+
+\begin{proof}
+Quantum relative entropy is the Bregman divergence of negative von Neumann entropy. Projection onto \eqref{eq:consistency}, with the support-face convention, gives
+\begin{equation}
+D(\rho_*\|\rho_t)\geq D(\rho_*\|\rho_{t+1})+D(\rho_{t+1}\|\rho_t).
+\label{eq:pythagoras}
+\end{equation}
+The POVM is a quantum-to-classical channel. Data processing and feasibility of $\rho_{t+1}$ yield
+\begin{equation}
+D(\rho_{t+1}\|\rho_t)\geq
+\KL(\M_t(\rho_{t+1})\|\M_t(\rho_t))
+=\KL(q_t\|p_t).
+\label{eq:data-processing}
+\end{equation}
+Finally, if $B(p,q)=\sum_i\sqrt{p_iq_i}$, Jensen's inequality and $-\log z\geq1-z$ give
+\begin{equation}
+\KL(q\|p)\geq-2\log B(p,q)\geq2(1-B(p,q))=\Hsq(p,q).
+\label{eq:kl-hellinger}
+\end{equation}
+Combining \eqref{eq:pythagoras}--\eqref{eq:kl-hellinger} proves \eqref{eq:intro-chain}. Summation telescopes. The supplement proves \eqref{eq:pythagoras} when the projection is singular and shows that zero predicted probabilities cause no undefined term.
+\end{proof}
+
+Theorem \ref{thm:telescope} is a realizable, comparator-dependent statement rather than regret to the best state after arbitrary labels. It is also stronger than a thresholded mistake bound: for every $\epsilon>0$, at most $D(\rho_*\|\rho_1)/\epsilon^2$ rounds can have Hellinger distance above $\epsilon$.
+
+\section{Adversarial Phase Retrieval}
+\label{sec:phase}
+
+Fix $\mathbb F\in\{\R,\C\}$. On round $t$, an adversary reveals $x_t\in\mathbb F^d$ with $\norm{x_t}_2\leq1$. A fixed target $w_*\in\mathbb F^d$ generates
+\begin{equation}
+y_t=|\ip{w_*}{x_t}|.
+\end{equation}
+The learner predicts $\widehat y_t\in[0,1]$, observes $y_t$, and incurs $(\widehat y_t-y_t)^2$. Sensing vectors may depend on the entire previous transcript.
+
+\begin{corollary}[Horizon-free phase retrieval]
+\label{cor:phase-upper}
+If $\norm{w_*}_2=1$, there is a lifted learner, efficiently implementable to certified numerical precision, such that, for every $T$,
+\begin{equation}
+\sum_{t=1}^T(\widehat y_t-y_t)^2\leq\log d.
+\label{eq:phase-logd}
+\end{equation}
+If only $\norm{w_*}_2\leq1$ is known, the right side is at most $\log(d+1)$ and more precisely equals
+\begin{equation}
+\log(d+1)-h_2(\norm{w_*}_2^2),
+\label{eq:norm-adaptive}
+\end{equation}
+where $h_2$ is binary entropy.
+\end{corollary}
+
+\begin{proof}
+First suppose $\norm{w_*}_2=1$. Set $A_t=x_tx_t^*\preceq I$, use the binary POVM $(A_t,I-A_t)$, and take $\rho_*=w_*w_*^*\in\Dens_d$. Then its first target probability is
+\begin{equation}
+q_t=\tr(A_t\rho_*)=y_t^2.
+\end{equation}
+Run \eqref{eq:iprojection} from $I/d$ and predict
+\begin{equation}
+\widehat y_t=\sqrt{p_t},\qquad p_t=\tr(A_t\rho_t).
+\end{equation}
+The first coordinate of binary Hellinger divergence gives
+\begin{equation}
+(\widehat y_t-y_t)^2=(\sqrt{p_t}-\sqrt{q_t})^2
+\leq\Hsq(\Ber(p_t),\Ber(q_t)).
+\end{equation}
+Theorem \ref{thm:telescope} and $\Ent(\rho_*)=0$ prove \eqref{eq:phase-logd}.
+
+For $\norm{w_*}_2\leq1$, work in dimension $d+1$ with
+\begin{equation}
+\rho_*=\begin{pmatrix}w_*w_*^*&0\\0&1-\norm{w_*}_2^2\end{pmatrix},
+\qquad
+A_t=\begin{pmatrix}x_tx_t^*&0\\0&0\end{pmatrix}.
+\label{eq:slack-lift}
+\end{equation}
+The two nonzero eigenvalues of $\rho_*$ are $\norm{w_*}_2^2$ and $1-\norm{w_*}_2^2$, which proves \eqref{eq:norm-adaptive}.
+\end{proof}
+
+The lift is not limited to rank one. If $Q_*\succeq0$ and $\tr(Q_*)=1$, the target $y_t=\sqrt{x_t^*Q_*x_t}$ has total squared loss at most $\log d-\Ent(Q_*)$. If $\tr(Q_*)\leq1$, the slack construction gives the analogous $d+1$ bound. Thus the theorem learns root-quadratic forms and adapts to their spectral entropy.
+
+\section{A Matching Lower Bound}
+\label{sec:lower}
+
+Define the fixed-target worst-horizon minimax value of unit-norm phase retrieval by
+\begin{align}
+\mathfrak V_d(\mathbb F)
+&=\sup_{T\geq1}\inf_{\mathcal A}\sup_{\substack{\norm{w_*}_2=1,\ w_*\text{ fixed}\\\text{adaptive sensing strategy}}}\nonumber\\
+&\quad\mathbb E\!\left[\sum_{t=1}^T(\widehat y_t-y_t)^2\right].
+\label{eq:minimax}
+\end{align}
+In the supremum, one target $w_*$ is fixed before play. The sensing vector $x_t$ may depend on past sensing vectors and revealed amplitudes, but not on learner predictions or private randomness. Its label is then $|\ip{w_*}{x_t}|$. The infimum includes randomized and improper learners.
+
+\begin{theorem}[Fixed-target minimax and lower tail]
+\label{thm:phase-minimax}
+For every $d\geq2$ and $\mathbb F\in\{\R,\C\}$,
+\begin{equation}
+\frac14\lfloor\log_2d\rfloor\leq\mathfrak V_d(\mathbb F)\leq\log d.
+\label{eq:minimax-sandwich}
+\end{equation}
+The lower bound uses at most $d-1$ rounds. More strongly, for every randomized learner and $\delta\in(0,1)$, there are a target fixed before play and a sensing strategy independent of its predictions for which, with probability at least $1-\delta$,
+\begin{equation}
+\sum_t(\widehat y_t-y_t)^2\geq\frac14\lfloor\log_2d\rfloor-\sqrt{\log\frac1\delta}.
+\label{eq:phase-lower-tail}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+The upper bound is Corollary \ref{cor:phase-upper}. For the lower bounds, let $D=2^{\lfloor\log_2d\rfloor}$ and restrict to the first $D$ coordinates. Draw one target before play, uniformly from
+\begin{equation}
+w_s=\frac1{\sqrt D}(s_1,\ldots,s_D,0,\ldots,0),\qquad s\in\{-1,1\}^D.
+\end{equation}
+Use the dyadic merge invariant of \citet{doronarad2026online}. At any stage, partition $[D]$ into equal-size dyadic blocks. Each block $B$ has a public reference pattern $r_B\in\{-1,1\}^B$. Conditional on the labels so far, the target orientations on current blocks remain independent fair signs.
+
+Merge two blocks $B_0,B_1$ of size $r/2$ by querying the unit vector
+\begin{equation}
+x_B=\frac1{\sqrt r}\left(\sum_{i\in B_0}r_{B_0}(i)e_i+
+\sum_{i\in B_1}r_{B_1}(i)e_i\right).
+\label{eq:merge-query}
+\end{equation}
+If the child orientations agree, the amplitude is $b=\sqrt{r/D}$. If they disagree, it is zero. Conditional on the past, these labels are fair and independent of the current prediction. For every prediction $a\in\R$,
+\begin{equation}
+\frac12\{a^2+(a-b)^2\}\geq\frac{b^2}{4}=\frac{r}{4D}.
+\label{eq:merge-loss}
+\end{equation}
+The observed label records the corresponding relative orientation in the merged pattern, preserving conditional fairness across the new blocks.
+
+There are $D/r$ merges at merged block size $r$, so each level contributes at least $1/4$ in conditional expectation. The $\log_2D$ levels use $D-1$ queries. Averaging over the fixed target gives one target attaining the expected lower bound against any randomized learner.
+
+For \eqref{eq:phase-lower-tail}, clip each prediction to $[0,b]$, which only reduces its loss against $\{0,b\}$. If $L_t$ is its loss and $\mu_t$ its conditional mean, then $\mu_t\geq b^2/4$. The two possible values of $\mu_t-L_t$ lie in an interval of length at most $b^2$. Across all merges, $\sum_tb_t^4=2-2/D$. The conditional Hoeffding lemma therefore gives \eqref{eq:phase-lower-tail}. Averaging its success probability over the target prior again selects one fixed target. The supplement supplies the filtration and constants.
+\end{proof}
+
+Theorem \ref{thm:phase-minimax} closes the dimension dependence on the exact subclass used to prove the fixed-width lower bound of \citet{doronarad2026online}. Their construction chooses a maximizing label after each prediction. Conditional fairness strengthens it to a target fixed before play, a nonanticipating sensing strategy, and a lower tail. The result does not close the gap for arbitrary sums of two ReLUs, whose signs, offsets, and unequal directions do not reduce to one positive semidefinite rank-one target.
+
+The phase construction also lower-bounds the general POVM game with pure real states and binary rank-one measurements. For general measurements, the entropy dependence admits an exact result. Let $\mathcal U_{m,r}$ be the states that are maximally mixed on an $r$-dimensional subspace, and define $\mathfrak W^{\KL}_{m,r}$ and $\mathfrak W^{\rm H}_{m,r}$ as in \eqref{eq:minimax}, with target in $\mathcal U_{m,r}$ and per-round loss respectively $\KL(q_t\|p_t)$ and $\Hsq(q_t,p_t)$.
+
+\begin{theorem}[Exact KL value and entropy sharpness]
+\label{thm:rank-minimax}
+For $1\leq r\leq m$,
+\begin{equation}
+\begin{aligned}
+\mathfrak W^{\KL}_{m,r}&=\log\frac mr,\\
+(2-\sqrt2)\left\lfloor\log_2\left\lfloor\frac mr\right\rfloor\right\rfloor
+&\leq\mathfrak W^{\rm H}_{m,r}\leq\log\frac mr.
+\end{aligned}
+\label{eq:rank-minimax}
+\end{equation}
+The KL lower bound uses one round.
+\end{theorem}
+
+\begin{proof}
+Theorem \ref{thm:telescope} with $\rho_1=I/m$ gives both upper bounds because every target has entropy $\log r$. For the KL lower bound, draw $J$ uniformly from all rank-$r$ coordinate subsets before play and reveal the computational-basis POVM. For every prediction $p\in\Delta_m$,
+\begin{equation}
+\mathbb E_J\KL(\operatorname{Unif}(J)\|p)=-\log r-\frac1m\sum_{j=1}^m\log p_j\geq\log\frac mr
+\end{equation}
+by the geometric-mean inequality. Thus one fixed $J$ attains the lower bound. For Hellinger loss, put $k=\lfloor\log_2\lfloor m/r\rfloor\rfloor$, take $2^k$ disjoint coordinate blocks of size $r$, and draw the target block uniformly before play. Repeated balanced binary diagonal projectors make the deterministic target outcome conditionally fair. Every Bernoulli prediction has conditional expected loss at least $\min_p\{2-\sqrt p-\sqrt{1-p}\}=2-\sqrt2$. Summing and averaging over the fixed block proves the claim.
+\end{proof}
+
+\section{Intervals and Computation}
+\label{sec:robust}
+
+Exact amplitudes are idealized. Suppose instead that after predicting, the learner observes $z_t$ and a certified radius $\epsilon_t$ satisfying $|z_t-y_t|\leq\epsilon_t$. Let
+\begin{equation}
+I_t=[(z_t-\epsilon_t)_+,\min\{1,z_t+\epsilon_t\}]
+\end{equation}
+and project $\rho_t$ onto the linear slab
+\begin{equation}
+\C_t^{I}=\{\rho\in\Dens_m:\sqrt{\tr(A_t\rho)}\in I_t\}.
+\label{eq:slab}
+\end{equation}
+This is convex because it equivalently constrains $\tr(A_t\rho)$ to the squared interval.
+
+\begin{theorem}[Certified interval feedback]
+\label{thm:robust}
+For phase retrieval or root-quadratic prediction, the slab-projection learner satisfies
+\begin{align}
+\sum_{t=1}^T(\widehat y_t-y_t)^2
+&\leq\left(\sqrt{D(\rho_*\|\rho_1)}+2\sqrt{\sum_{t=1}^T\epsilon_t^2}\right)^2\nonumber\\
+&\leq2D(\rho_*\|\rho_1)+8\sum_{t=1}^T\epsilon_t^2.
+\label{eq:robust-bound}
+\end{align}
+In particular, the unit-norm uniform-prior bound is $(\sqrt{\log d}+2\sqrt{\sum_t\epsilon_t^2})^2$, which reduces to $\log d$ under exact feedback.
+\end{theorem}
+
+\begin{proof}
+Let $r_t=\tr(A_t\rho_{t+1})$. The target is in \eqref{eq:slab}, so projection and data processing give
+\begin{equation}
+\sum_t\Hsq(\Ber(p_t),\Ber(r_t))\leq D(\rho_*\|\rho_1).
+\end{equation}
+Both $\sqrt{r_t}$ and $y_t$ belong to $I_t$, hence $|\sqrt{r_t}-y_t|\leq2\epsilon_t$. By the triangle inequality in $\mathbb R^T$ and the first Hellinger coordinate,
+\begin{align}
+\left\|(\sqrt{p_t}-y_t)_{t=1}^T\right\|_2
+&\leq\left\|(\sqrt{p_t}-\sqrt{r_t})_{t=1}^T\right\|_2\nonumber\\
+&\quad+\left\|(\sqrt{r_t}-y_t)_{t=1}^T\right\|_2\\
+&\leq\sqrt{D(\rho_*\|\rho_1)}+2\sqrt{\sum_t\epsilon_t^2}.
+\end{align}
+Squaring proves the first bound. The second follows from $(a+b)^2\leq2a^2+2b^2$.
+\end{proof}
+
+The dependence on uncertainty is minimax sharp. The following lower bound uses one target fixed before play and queries independent of learner predictions.
+
+\begin{theorem}[Sharpness of certified intervals]
+\label{thm:robust-lower}
+Fix $d\geq4$, let $D=2^{\lfloor\log_2(d-2)\rfloor}$, and fix $N\geq1$ and $0<\epsilon\leq1/8$. Every randomized learner has a unit-norm target and a nonanticipating sequence of $D-1$ exact rounds followed by $N$ radius-$\epsilon$ rounds such that
+\begin{equation}
+\mathbb E\sum_t(\widehat y_t-y_t)^2\geq\frac18\log_2D+N\epsilon^2.
+\label{eq:robust-lower}
+\end{equation}
+Hence the robust minimax dependence is $\Theta(\log d+N\epsilon^2)$ up to universal constants.
+\end{theorem}
+
+\begin{proof}
+Draw signs $s\in\{-1,1\}^D$ and a branch $\nu\in\{-1,1\}$ independently and uniformly. Put squared norm $1/2$ on the sign block, amplitude $a+\nu\epsilon$ on coordinate $D+1$ for $a=1/4$, and the remaining norm on an unqueried coordinate. The target is unit norm because $1/2+(a+\epsilon)^2<1$. Scaled dyadic queries force expected loss $(1/8)\log_2D$. Then query $e_{D+1}$ for $N$ rounds and always return $z_t=a$ with certified radius $\epsilon$. The feedback is identical under both branches, and
+\begin{equation}
+\frac12\sum_{\nu\in\{-1,1\}}(\widehat y-a-\nu\epsilon)^2=(\widehat y-a)^2+\epsilon^2.
+\end{equation}
+Thus these rounds force $N\epsilon^2$ in expectation. Averaging over $(s,\nu)$ selects one fixed target. The supplement gives the combined construction in full.
+\end{proof}
+
+For a binary equality $\tr(A\rho)=q$ and an iterate positive definite on its support, the projection has the form
+\begin{equation}
+\rho(\lambda)=\frac{\exp(\log\rho_t-\lambda A)}{\tr\exp(\log\rho_t-\lambda A)}.
+\label{eq:exponential-form}
+\end{equation}
+The function $\lambda\mapsto\tr(A\rho(\lambda))$ is nonincreasing because it is the negative derivative of a convex log-partition function. Bisection therefore reduces each phase update to a one-dimensional root problem, with an eigendecomposition or matrix exponential at each step. A slab update is a no-op if $p_t$ already lies in the interval, and otherwise projects to the nearer active boundary in the relative-entropy geometry. Boundary labels are limits on a reduced support face, as in minimum-relative-entropy quantum estimation \citep{zorzi2014minimum}. The supplement also gives an additive-defect certificate for approximate solves.
+
+\section{Relation to Prior Work}
+\label{sec:related}
+
+\paragraph{Matrix entropic updates.} \citet{tsuda2005matrix} introduced matrix exponentiated-gradient updates, von Neumann Bregman projections, and a realizable logarithmic relative-loss analysis for squared errors in linear intensities. \citet{zorzi2014minimum} establish existence, uniqueness, support reduction, and exponential-family solutions for offline quantum relative-entropy estimation under affine constraints. \citet{sreekumar2026quantum} prove the finite-dimensional quantum Pythagorean theorem for compact convex and mixture families, including support conditions, in a batch maximum-likelihood setting. Our projection step uses this geometry. The new consequence is the online data-processed KL telescope, its multioutcome Hellinger form, and the square-root geometry that yields a tight amplitude result. Squared intensity control alone does not imply our horizon-free amplitude bound near zero.
+
+\paragraph{Online quantum-state learning.} \citet{aaronson2018online} obtain $O((\log m)/\epsilon^2)$ large-error mistakes and $O(\sqrt{T\log m})$ generic regret for binary expectation prediction. Subsequent work gives practical, low-rank, pure-state, adaptive, or structured generic-regret refinements \citep{chen2020practical,yang2020revisiting,meyer2025pure,bansal2026structured}. \citet{bansal2024panoply} extend $O(\sqrt T)$ Lipschitz-loss regret to compact convex classes of positive semidefinite objects, including pure-state Gram matrices. \citet{tseng2025logarithmic} study the different loss $-\log\tr(A_t\rho_t)$ against the best hindsight state and obtain dimension-polynomial logarithmic regret. These protocols reveal noisy scalar outcomes or loss functions. None of their bounds states the finite cumulative KL or Hellinger guarantee under exact realizable outcome-law feedback. Conversely, our theorem does not improve their sampled-outcome guarantees.
+
+\paragraph{Realizable regression and phase retrieval.} The scaled online dimension characterizes horizon-free realizable regression abstractly, and entropy integrals can bound it \citep{raman2025unified,doronarad2026online}. For bounded two-ReLU networks, the resulting dimension dependence is polylogarithmic. Our lifted information projection exploits the stronger algebraic structure of absolute-linear prediction to attain the exact logarithmic order efficiently. Stochastic phase-retrieval algorithms use random designs and convergence of a nonconvex iterate \citep{tan2019online}. \citet{bastianello2022opreg} use online phase retrieval as a time-varying optimization benchmark, tracking changing signals from noisy batch objectives rather than predicting adaptively chosen measurements. Robust batch work permits adversarial corruptions among random measurements \citep{huang2023adversarial,buna2025robust}. None of these settings permits adaptive worst-case sensing vectors with a horizon-free cumulative prediction guarantee.
+
+\section{Discussion}
+
+Relative entropy supplies exactly one logarithmic unit of initial uncertainty per effective dimension, while a dyadic adversary can extract a constant amount at each binary scale. This explains both sides of Theorem \ref{thm:phase-minimax}. The proof is insensitive to vanishing amplitudes because Hellinger distance measures square-root probabilities directly.
+
+There are three important limits. First, exact probability feedback is stronger than observing one quantum measurement outcome. Second, the state lift is generally improper for phase retrieval because $\rho_t$ need not be rank one, though its amplitude prediction is efficiently computable. Third, the result resolves the absolute-linear hard subclass rather than the whole two-ReLU class. Extending the entropic telescope to signed combinations of several independently oriented rank-one components is a concrete obstacle left open.
+
+\bibliography{references}
+
+\clearpage
+\appendix
+\end{document}

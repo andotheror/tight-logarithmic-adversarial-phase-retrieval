@@ -1,0 +1,287 @@
+\documentclass[twoside]{article}
+\usepackage[preprint]{aistats2027}
+\usepackage[round,authoryear]{natbib}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{xr}
+\externaldocument[M-]{main}
+\renewcommand{\bibname}{References}
+\renewcommand{\bibsection}{\subsubsection*{\bibname}}
+\bibliographystyle{apalike}
+\setlength{\bibsep}{0pt plus 0.3ex}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newcommand{\Dens}{\mathcal D}
+\newcommand{\M}{\mathcal M}
+\newcommand{\C}{\mathcal C}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\KL}{\operatorname{KL}}
+\newcommand{\Hsq}{\operatorname{H}^2}
+\newcommand{\Ber}{\operatorname{Ber}}
+\newcommand{\norm}[1]{\left\lVert #1\right\rVert}
+\begin{document}
+\runningauthor{}
+\twocolumn[
+\aistatstitle{Supplement: Tight Logarithmic Bounds for Adversarial Online Phase Retrieval}
+\aistatsauthor{Pahan Dewasurendra}
+\aistatsaddress{Johns Hopkins University}
+]
+\appendix
+
+\section{Information Projection on Support Faces}
+\label{app:projection}
+
+We prove the Pythagorean inequality used in Theorem \ref{M-thm:telescope}, including singular minimizers. For a positive semidefinite matrix $R$, let
+\begin{equation}
+\mathcal F(R)=\{X\in\Dens_m:\supp(X)\subseteq\supp(R)\}.
+\end{equation}
+This is the face of the density-matrix set supported by $R$.
+
+\begin{proposition}[Support-face information projection]
+\label{prop:face-projection}
+Let $R\in\Dens_m$, let $\C\subseteq\Dens_m$ be a nonempty closed convex set, and suppose $\C\cap\mathcal F(R)$ is nonempty. The problem
+\begin{equation}
+\eta\in\arg\min_{X\in\C\cap\mathcal F(R)}D(X\|R)
+\label{eq:face-problem}
+\end{equation}
+has a unique solution. For every $U\in\C\cap\mathcal F(R)$,
+\begin{equation}
+D(U\|R)\geq D(U\|\eta)+D(\eta\|R).
+\label{eq:face-pythagoras}
+\end{equation}
+In particular, $\supp(U)\subseteq\supp(\eta)$.
+\end{proposition}
+
+\begin{proof}
+Restrict all matrices to $\supp(R)$. On this finite-dimensional space, $R$ is positive definite and $D(X\|R)$ is finite and continuous on the compact density-matrix set. Existence follows. Strict convexity of $X\mapsto\tr(X\log X)$ on density matrices gives uniqueness.
+
+Fix feasible $U$ and suppose for contradiction that $\supp(U)\nsubseteq\supp(\eta)$. Let $\Pi_0$ project onto $\ker(\eta)$ and put $a=\tr(\Pi_0U)>0$. The feasible segment $X_s=(1-s)\eta+sU$ enters a nonzero direction in this kernel. One-sided Hermitian eigenvalue perturbation gives small eigenvalues $s$ times the positive eigenvalues of $\Pi_0U\Pi_0$, up to $O(s^2)$, while the positive eigenvalues of $\eta$ change by $O(s)$. Consequently,
+\begin{equation}
+\tr(X_s\log X_s)=\tr(\eta\log\eta)+sa\log s+O(s).
+\label{eq:entropy-boundary-expansion}
+\end{equation}
+The term $-\tr(X_s\log R)$ is affine with a finite derivative because $R$ is positive definite on the restricted space. Therefore
+\begin{equation}
+\left.\frac{d}{ds}D(X_s\|R)\right|_{s=0+}=-\infty,
+\end{equation}
+contradicting minimality of $\eta$. Hence $\supp(U)\subseteq\supp(\eta)$.
+
+The finite right derivative along the same segment must now be nonnegative:
+\begin{equation}
+\tr\{(U-\eta)(\log\eta-\log R)\}\geq0.
+\label{eq:first-order}
+\end{equation}
+The three-point identity on the common support is
+\begin{align}
+D(U\|R)-D(U\|\eta)&-D(\eta\|R)\nonumber\\
+&=\tr\{(U-\eta)(\log\eta-\log R)\}.
+\end{align}
+Combining it with \eqref{eq:first-order} proves \eqref{eq:face-pythagoras}.
+\end{proof}
+
+The support inclusion in Proposition \ref{prop:face-projection} is stronger than needed for one round, but it closes the online induction. Initially $\rho_1$ is full rank. If $D(\rho_*\|\rho_t)<\infty$, then $\rho_*\in\mathcal F(\rho_t)$ and is feasible for the next projection. Proposition \ref{prop:face-projection} with $U=\rho_*$ implies
+\begin{equation}
+\supp(\rho_*)\subseteq\supp(\rho_{t+1})\subseteq\supp(\rho_t)
+\end{equation}
+and $D(\rho_*\|\rho_{t+1})<\infty$. Thus every update exists and the target remains on the active face.
+
+There is also no hidden infinite classical KL term. If $p_i=\tr(E_i\rho_t)=0$ for $E_i\succeq0$, then $E_i^{1/2}\rho_tE_i^{1/2}=0$, so $E_i$ vanishes on $\supp(\rho_t)$. Since $\supp(\rho_*)\subseteq\supp(\rho_t)$, it follows that $q_i=\tr(E_i\rho_*)=0$. We use the usual convention $0\log(0/0)=0$.
+
+This face reduction is consistent with the general affine minimum-relative-entropy analysis of \citet{zorzi2014minimum}. We included the argument because the online proof needs the nesting of supports explicitly.
+
+\section{Measurement Contraction and Hellinger Geometry}
+\label{app:hellinger}
+
+For completeness, a POVM $\M=(E_i)_{i=1}^K$ defines the completely positive trace-preserving quantum-to-classical map
+\begin{equation}
+\Phi_{\M}(X)=\sum_{i=1}^K\tr(E_iX)|i\rangle\langle i|.
+\end{equation}
+Monotonicity of quantum relative entropy under such maps gives
+\begin{equation}
+D(U\|R)\geq D(\Phi_{\M}(U)\|\Phi_{\M}(R))
+=\KL(\M(U)\|\M(R)).
+\end{equation}
+
+We next verify the exact normalization used for Hellinger divergence. Let $Z_i=\log(q_i/p_i)$ under $i\sim q$, ignoring zero-$q_i$ coordinates. Then
+\begin{equation}
+\sum_i\sqrt{p_iq_i}=\mathbb E_q[e^{-Z_i/2}].
+\end{equation}
+Convexity of the exponential gives
+\begin{equation}
+\log\sum_i\sqrt{p_iq_i}\geq-\frac12\mathbb E_q[Z_i]
+=-\frac12\KL(q\|p).
+\end{equation}
+Since $-\log z\geq1-z$,
+\begin{align}
+\KL(q\|p)&\geq-2\log\sum_i\sqrt{p_iq_i}\\
+&\geq2\left(1-\sum_i\sqrt{p_iq_i}\right)\\
+&=\sum_i(\sqrt{p_i}-\sqrt{q_i})^2.
+\end{align}
+Together with Proposition \ref{prop:face-projection}, this proves every step in \eqref{M-eq:intro-chain}.
+
+\section{Phase and Root-Quadratic Lifts}
+\label{app:lifts}
+
+If $x\in\mathbb F^d$ for $\mathbb F\in\{\mathbb R,\mathbb C\}$ has norm at most one, then $A=xx^*$ satisfies $0\preceq A\preceq I$. It therefore defines the binary POVM $(A,I-A)$. For a unit signal $w$, the pure density matrix $ww^*$ gives
+\begin{equation}
+\tr(Aww^*)=\tr(xx^*ww^*)=|w^*x|^2.
+\end{equation}
+The predicted and target amplitudes are the square roots of the first outcome probabilities. This establishes the exact, not merely Lipschitz, loss transfer
+\begin{align}
+(\widehat y-y)^2&=(\sqrt p-\sqrt q)^2\nonumber\\
+&\leq(\sqrt p-\sqrt q)^2\nonumber\\
+&\quad +(\sqrt{1-p}-\sqrt{1-q})^2.
+\end{align}
+
+For $\norm w_2\leq1$, the matrix in \eqref{M-eq:slack-lift} is positive semidefinite and has trace one. Its only possibly nonzero eigenvalues are $\norm w_2^2$ and $1-\norm w_2^2$. Thus
+\begin{equation}
+S(\rho_*)=h_2(\norm w_2^2).
+\end{equation}
+The root-quadratic extension replaces $ww^*$ by an arbitrary $Q\succeq0$. If $\tr Q<1$, append $1-\tr Q$ as the slack eigenvalue. No rank assumption enters Theorem \ref{M-thm:telescope}, so its sharper prior-dependent bound is
+\begin{equation}
+D(\rho_*\|\rho_1)
+\end{equation}
+for any chosen full-rank prior, and its uniform-prior bound subtracts the entire spectral entropy of the lifted target.
+
+\section{Fixed-Target Dyadic Lower Bound}
+\label{app:lower}
+
+We expand Theorem \ref{M-thm:phase-minimax}. Let $D$ be a power of two and draw $s$ uniformly from $\{-1,1\}^D$ before play. A current partition $\mathcal P$ consists of dyadic blocks. For each $B\in\mathcal P$, maintain a public vector $r_B\in\{-1,1\}^B$. Conditional on the labels revealed so far, the posterior version space is
+\begin{align}
+\mathcal V(\mathcal P,r)=\{s\in\{-1,1\}^D:\;&s_B\in\{r_B,-r_B\}\nonumber\\
+&\text{for every }B\in\mathcal P\}.
+\label{eq:version-space}
+\end{align}
+The posterior is uniform on this set. Equivalently, the orientations $\sigma_B\in\{-1,1\}$ defined by $s_B=\sigma_Br_B$ are independent fair signs across current blocks. Initially the blocks are singletons and $r_{\{i\}}(i)=1$, so the claim holds.
+
+Suppose adjacent blocks $B_0,B_1$ each have size $r/2$. For the query in \eqref{M-eq:merge-query},
+\begin{align}
+w_s^\top x_B
+&=\frac{1}{\sqrt{Dr}}\left(\sigma_{B_0}|B_0|+\sigma_{B_1}|B_1|\right)\\
+&=\frac{\sqrt r}{2\sqrt D}(\sigma_{B_0}+\sigma_{B_1}).
+\end{align}
+The amplitude is $b=\sqrt{r/D}$ if the orientations agree and zero otherwise. These labels are conditionally fair. If the observed label is high, define the merged pattern by
+\begin{equation}
+r_B(i)=\begin{cases}r_{B_0}(i),&i\in B_0,\\r_{B_1}(i),&i\in B_1.\end{cases}
+\end{equation}
+If it is zero, define
+\begin{equation}
+r_B(i)=\begin{cases}r_{B_0}(i),&i\in B_0,\\-r_{B_1}(i),&i\in B_1.\end{cases}
+\end{equation}
+In either case, the two compatible assignments on $B$ are $r_B$ and $-r_B$. Conditioning independent fair child orientations on their relative orientation leaves their common orientation fair and independent of all other blocks. This proves the posterior invariant inductively. The query and reference update depend only on past labels, never on learner predictions.
+
+Let $\mathcal F_{t-1}$ contain the learner's private random seed, the past transcript, and the current query $x_t$. The query is measurable with respect to the past labels and is independent of learner predictions. The target is independent of the private seed. If $a_t$ is the learner's current prediction, conditional fairness gives
+\begin{align}
+\mathbb E[L_t\mid\mathcal F_{t-1}]
+&=\frac12\{a_t^2+(a_t-b_t)^2\}\nonumber\\
+&=\left(a_t-\frac{b_t}{2}\right)^2+\frac{b_t^2}{4}\geq\frac{b_t^2}{4}.
+\label{eq:conditional-merge-loss}
+\end{align}
+There are $D/r$ merges with $b_t^2=r/D$ at merged size $r$. Every level therefore contributes at least $1/4$ in conditional expectation. The merged sizes $2,4,\ldots,D$ give $\log_2D$ levels and use $D-1$ rounds. Averaging over the target prior selects one fixed target with expected loss at least $\frac14\log_2D$ against the randomized learner.
+
+For the lower tail, replace $a_t$ by its projection onto $[0,b_t]$, which can only reduce loss against either feasible label. Write $\mu_t=\mathbb E[L_t\mid\mathcal F_{t-1}]$ and $X_t=\mu_t-L_t$. The two possible values of $X_t$ differ by
+\begin{equation}
+|a_t^2-(a_t-b_t)^2|=b_t|2a_t-b_t|\leq b_t^2.
+\end{equation}
+The conditional Hoeffding lemma gives
+\begin{equation}
+\mathbb E[\exp(\lambda X_t)\mid\mathcal F_{t-1}]\leq\exp(\lambda^2b_t^4/8).
+\end{equation}
+Iterating and applying Markov's inequality yields
+\begin{equation}
+\Pr\left\{\sum_tX_t\geq u\right\}\leq\exp\left(-\frac{2u^2}{\sum_tb_t^4}\right).
+\label{eq:conditional-hoeffding}
+\end{equation}
+The fourth-power budget is dimension-free:
+\begin{align}
+\sum_tb_t^4
+&=\sum_{r\in\{2,4,\ldots,D\}}\frac Dr\left(\frac rD\right)^2\nonumber\\
+&=\frac1D\sum_{r\in\{2,4,\ldots,D\}}r=2-\frac2D<2.
+\end{align}
+Set $u=\sqrt{\log(1/\delta)}$ in \eqref{eq:conditional-hoeffding} and combine it with \eqref{eq:conditional-merge-loss}. The joint success probability over target and learner randomness is at least $1-\delta$. Its average over targets is at least $1-\delta$, so one fixed target has conditional success probability at least $1-\delta$ over learner randomness. Padding to $D=2^{\lfloor\log_2d\rfloor}$ proves \eqref{M-eq:phase-lower-tail}. The dyadic invariant itself is the $k=2$ absolute-linear specialization of \citet{doronarad2026online}. Their proof chooses the harder branch after seeing the prediction, whereas the posterior argument above commits the target before play.
+
+\section{Certified Sets and Robust Amplitudes}
+\label{app:robust}
+
+There is a useful general set-valued version of the projection argument. Suppose feedback gives a closed convex set $Q_t$ of distributions containing the true $q_t$, and define
+\begin{equation}
+\C_t(Q_t)=\{\rho\in\Dens_m:\M_t(\rho)\in Q_t\}.
+\end{equation}
+Let $\rho_{t+1}$ be its information projection and put $r_t=\M_t(\rho_{t+1})$. The target remains feasible, so
+\begin{equation}
+\sum_t\Hsq(p_t,r_t)\leq D(\rho_*\|\rho_1).
+\label{eq:set-telescope}
+\end{equation}
+If every $Q_t$ has Hellinger diameter at most $2\epsilon_t$, Minkowski's inequality gives the sharper bound
+\begin{equation}
+\sum_t\Hsq(p_t,q_t)\leq\left(\sqrt{D(\rho_*\|\rho_1)}+2\sqrt{\sum_t\epsilon_t^2}\right)^2.
+\end{equation}
+
+Amplitude intervals need separate treatment because a short interval in square-root probability need not have small \emph{binary} Hellinger diameter near probability one. The proof of Theorem \ref{M-thm:robust} avoids this false implication. It uses only the first coordinate of \eqref{eq:set-telescope} and the direct fact that the projected and true amplitudes lie in the same interval of length at most $2\epsilon_t$. This is why the robust theorem controls amplitude loss rather than claiming a full binary-Hellinger diameter bound.
+
+\subsection{Matching lower bound for constant-radius intervals}
+
+We prove Theorem \ref{M-thm:robust-lower}. Let $D=2^{\lfloor\log_2(d-2)\rfloor}$, let $c=1/2$ and $a=1/4$, and draw $(s,\nu)$ uniformly from $\{-1,1\}^D\times\{-1,1\}$. Put $q_\nu=\sqrt{1-c-(a+\nu\epsilon)^2}$ and define the fixed target
+\begin{equation}
+w_{s,\nu}=\left(\sqrt{\frac cD}s,\ a+\nu\epsilon,\ q_\nu,\ 0_{d-D-2}\right),
+\label{eq:combined-robust-target}
+\end{equation}
+where the final zero block is omitted when it has dimension zero. The square root is real for $\epsilon\leq1/8$, and every target has unit norm. Run the fixed-target dyadic construction on the first $D$ coordinates. Scaling the sign block by $\sqrt c$ changes each nonzero merge label from $\sqrt{r/D}$ to $\sqrt{cr/D}$, so \eqref{eq:conditional-merge-loss} gives $c/4=1/8$ expected loss per level. These exact rounds reveal no information about $\nu$.
+
+For each of the next $N$ rounds, query $x_t=e_{D+1}$ and return the certified pair $(z_t,\epsilon_t)=(a,\epsilon)$. Both possible amplitudes $a-\epsilon$ and $a+\epsilon$ are consistent. Conditional on all preceding feedback, $\nu$ remains fair and independent of the current prediction. Hence
+\begin{align}
+\mathbb E[(\widehat y_t-y_t)^2\mid\mathcal F_{t-1}]
+&=\frac12\sum_{\nu\in\{-1,1\}}(\widehat y_t-a-\nu\epsilon)^2\\
+&=(\widehat y_t-a)^2+\epsilon^2\geq\epsilon^2.
+\end{align}
+Summing the two phases gives $(1/8)\log_2D+N\epsilon^2$ in expectation under the prior. Averaging selects one deterministic pair $(s,\nu)$, proving the theorem. The construction also shows why the interval penalty cannot be replaced by a horizon-free function of dimension alone.
+
+\section{Computation and Approximate Projections}
+\label{app:computation}
+
+Assume first that $R$ is positive definite and the equality $\tr(AX)=q$ admits an interior feasible state. Introduce multipliers $\lambda$ and $\nu$ for the measurement and trace constraints. Stationarity of
+\begin{equation}
+\tr\{X(\log X-\log R)\}+\lambda(\tr(AX)-q)+\nu(\tr X-1)
+\end{equation}
+gives
+\begin{equation}
+\log X-\log R+\lambda A+(1+\nu)I=0.
+\end{equation}
+Normalization yields \eqref{M-eq:exponential-form}. Define
+\begin{equation}
+\psi(\lambda)=\log\tr\exp(\log R-\lambda A).
+\end{equation}
+Standard matrix log-partition differentiation gives $\psi'(\lambda)=-\tr(A\rho(\lambda))$, while convexity of $\psi$ makes this expectation nonincreasing. Strict decrease holds unless $A$ is constant on the active support. Bisection therefore finds the unique constraint value whenever it is identifiable. Singular boundary solutions are obtained by restricting to the exposed support or as limits $|\lambda|\to\infty$. This is the same support reduction used in Proposition \ref{prop:face-projection}.
+
+For a slab $a\leq\tr(AX)\leq b$, the current state is its own projection when $\tr(AR)\in[a,b]$. Otherwise the active KKT constraint is the violated endpoint, reducing again to one scalar equality. For a $K$-outcome POVM, the analogous interior family has $K-1$ independent multipliers and is a finite-dimensional smooth convex dual problem.
+
+The exact theorem has a direct approximate analogue. Suppose a feasible approximate update $\widetilde\rho_{t+1}$ satisfies the global Pythagorean-defect certificate
+\begin{equation}
+D(U\|\rho_t)\geq D(U\|\widetilde\rho_{t+1})
++D(\widetilde\rho_{t+1}\|\rho_t)-\delta_t
+\label{eq:defect}
+\end{equation}
+for every feasible $U$ on the active face. Taking $U=\rho_*$, applying data processing, and telescoping gives
+\begin{align}
+\sum_t\KL(q_t\|p_t)&\leq D(\rho_*\|\rho_1)+\sum_t\delta_t,\\
+\sum_t\Hsq(p_t,q_t)&\leq D(\rho_*\|\rho_1)+\sum_t\delta_t.
+\end{align}
+Thus certified optimization error enters additively. An unconstrained numerical residual alone is not claimed to imply \eqref{eq:defect} without a dual or variational certificate.
+
+\section{Numerical Verification}
+\label{app:numerics}
+
+The submitted script \texttt{verify\_entropic\_phase.py} is a diagnostic, not evidence replacing a proof. It uses NumPy and SciPy to generate noncommuting random real density matrices and effects. For each instance, it solves the scalar equality projection by bisection in \eqref{M-eq:exponential-form} and checks feasibility, the Pythagorean inequality, measurement data processing, KL--Hellinger comparison, amplitude domination, and the interval-feedback scalar inequality. With seed $20260812$, 1,000 trials had maximum equality residual $6.495\times10^{-15}$, maximum Pythagorean residual $1.334\times10^{-12}$, and no inequality violation above $10^{-10}$. It also checks the fixed-target rank-stratified KL and Hellinger inequalities and merge and interval identities on 10,000 random instances, verifies the exact dyadic fourth-power budget through dimension $1024$, and checks unit norm of the combined robust targets.
+
+\paragraph{Reproduction.} From the source directory, run
+\begin{verbatim}
+python verify_entropic_phase.py
+\end{verbatim}
+with Python 3, NumPy, and SciPy installed. No data files, accelerators, or random downloads are used.
+
+\bibliography{references}
+\end{document}
