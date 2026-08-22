@@ -6,7 +6,7 @@ We study realizable online phase retrieval: after an adversarial sensing vector 
 
 ## Keywords
 
-online phase retrieval, adversarial online learning, quantum relative entropy, density matrices, regret bounds, horizon-free bounds
+tight, logarithmic, bounds, adversarial, online, phase, retrieval, study, realizable
 
 ## Files
 
